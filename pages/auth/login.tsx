@@ -18,12 +18,16 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting login...');
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Login result:', data, error);
+
       if (error) throw error;
+      if (!data.user) throw new Error('Login failed: No user returned');
 
       router.push('/dashboard');
     } catch (err: any) {
