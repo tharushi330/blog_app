@@ -5,3 +5,5 @@
 - Setup Supabase project + connect to app
 - Add login/register UI + Supabase Auth
  
+-create supabase tables
+-create dashboard
