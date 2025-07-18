@@ -6,4 +6,9 @@
 - Add login/register UI + Supabase Auth
  
 -create supabase tables
--create dashboard
+-create bucket
+-create post & upload image
+-create search post 
+
+- make a visibility
+- Protected premium content
