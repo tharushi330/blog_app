@@ -13,13 +13,18 @@ export default function FomeCreate() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Fetch logged in user
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data?.user) router.push('/login');
-      else setUser(data.user);
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (error || !data?.user) {
+        router.push('/login');
+      } else {
+        setUser(data.user);
+      }
     });
   }, [router]);
 
+  // Preview image
   useEffect(() => {
     if (!imageFile) {
       setImagePreview(null);
@@ -27,10 +32,10 @@ export default function FomeCreate() {
     }
     const url = URL.createObjectURL(imageFile);
     setImagePreview(url);
-
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
+  // Handle Submit
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -46,31 +51,46 @@ export default function FomeCreate() {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('postimage')
         .upload(fileName, imageFile);
 
-      if (uploadError) throw new Error('Image upload failed: ' + uploadError.message);
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error('Image upload failed: ' + uploadError.message);
+      }
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: publicData } = supabase.storage
         .from('postimage')
         .getPublicUrl(fileName);
 
+      if (!publicData?.publicUrl) {
+        throw new Error('Could not get image public URL');
+      }
+
       const { error: insertError } = await supabase
         .from('posts')
-        .insert({
-          user_id: user.id,
-          description,
-          image_url: publicUrl,
-        });
+        .insert([
+          {
+            user_id: user.id,
+            description,
+            image_url: publicData.publicUrl,
+          },
+        ]);
 
-      if (insertError) throw new Error('Failed to create post: ' + insertError.message);
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error('Failed to create post: ' + insertError.message);
+      }
 
+      // Reset form
       setDescription('');
       setImageFile(null);
+      setImagePreview(null);
       setError('');
-      router.refresh();
+      router.refresh(); // optional
     } catch (err: any) {
+      console.error('Final error:', err);
       setError(err.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);

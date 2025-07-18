@@ -1,14 +1,23 @@
-import Link from 'next/link';
-
-export default function PostCard({ post }: any) {
-  const preview = post?.content ? post.content.slice(0, 100) + '...' : 'No content available';
-
-  return (
-    <Link href={`/post/${post.id}`}>
-      <div className="border p-4 rounded shadow hover:shadow-md">
-        <h3 className="text-xl font-semibold">{post.title || 'Untitled'}</h3>
-        <p className="text-gray-600">{preview}</p>
+interface PostCardProps {
+    post: {
+      id: string;
+      description: string;
+      image_url: string;
+    };
+  }
+  
+  export default function PostCard({ post }: PostCardProps) {
+    return (
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <img
+          src={post.image_url}
+          alt="Post image"
+          className="w-full h-48 object-cover"
+        />
+        <div className="p-4">
+          <p className="text-gray-700">{post.description}</p>
+        </div>
       </div>
-    </Link>
-  );
-}
+    );
+  }
+  
