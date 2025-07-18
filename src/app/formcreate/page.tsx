@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabaseClient';
+import { User } from '@supabase/supabase-js';
 
 export default function FomeCreate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -17,7 +18,7 @@ export default function FomeCreate() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch logged in user
+  // Fetch logged-in user
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error }) => {
       if (error || !data?.user) {
@@ -54,7 +55,7 @@ export default function FomeCreate() {
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -62,7 +63,7 @@ export default function FomeCreate() {
     try {
       let image_url = existingImage;
 
-      // If a new image is selected, upload it
+      // Upload new image
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
@@ -77,7 +78,7 @@ export default function FomeCreate() {
           .from('postimage')
           .getPublicUrl(fileName);
 
-        image_url = publicData?.publicUrl;
+        image_url = publicData?.publicUrl || null;
       }
 
       // Create or update post
@@ -90,6 +91,8 @@ export default function FomeCreate() {
         if (updateError) throw new Error('Update failed.');
         alert('Post updated successfully!');
       } else {
+        if (!user) throw new Error('User not found');
+
         const { error: insertError } = await supabase.from('posts').insert([
           {
             user_id: user.id,
@@ -97,18 +100,23 @@ export default function FomeCreate() {
             image_url,
           },
         ]);
+
         if (insertError) throw new Error('Post creation failed.');
         alert('Post created successfully!');
       }
 
-      // Reset & redirect
+      // Reset form
       setDescription('');
       setImageFile(null);
       setImagePreview(null);
       setExistingImage(null);
       router.push('/');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setLoading(false);
     }
