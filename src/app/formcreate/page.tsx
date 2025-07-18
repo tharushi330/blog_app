@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabaseClient';
 
 export default function FomeCreate() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const postId = searchParams.get('id');
+
   const [user, setUser] = useState<any>(null);
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingImage, setExistingImage] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,74 +28,87 @@ export default function FomeCreate() {
     });
   }, [router]);
 
+  // If editing, fetch existing post
+  useEffect(() => {
+    if (postId) {
+      supabase
+        .from('posts')
+        .select('*')
+        .eq('id', postId)
+        .single()
+        .then(({ data, error }) => {
+          if (data) {
+            setDescription(data.description);
+            setExistingImage(data.image_url);
+            setImagePreview(data.image_url);
+          }
+        });
+    }
+  }, [postId]);
+
   // Preview image
   useEffect(() => {
-    if (!imageFile) {
-      setImagePreview(null);
-      return;
-    }
+    if (!imageFile) return;
     const url = URL.createObjectURL(imageFile);
     setImagePreview(url);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
-  // Handle Submit
-  const handlePost = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    if (!imageFile) {
-      setError('Image is required');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      let image_url = existingImage;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('postimage')
-        .upload(fileName, imageFile);
+      // If a new image is selected, upload it
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error('Image upload failed: ' + uploadError.message);
+        const { error: uploadError } = await supabase.storage
+          .from('postimage')
+          .upload(fileName, imageFile);
+
+        if (uploadError) throw new Error('Image upload failed.');
+
+        const { data: publicData } = supabase.storage
+          .from('postimage')
+          .getPublicUrl(fileName);
+
+        image_url = publicData?.publicUrl;
       }
 
-      const { data: publicData } = supabase.storage
-        .from('postimage')
-        .getPublicUrl(fileName);
+      // Create or update post
+      if (postId) {
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({ description, image_url })
+          .eq('id', postId);
 
-      if (!publicData?.publicUrl) {
-        throw new Error('Could not get image public URL');
-      }
-
-      const { error: insertError } = await supabase
-        .from('posts')
-        .insert([
+        if (updateError) throw new Error('Update failed.');
+        alert('Post updated successfully!');
+      } else {
+        const { error: insertError } = await supabase.from('posts').insert([
           {
             user_id: user.id,
             description,
-            image_url: publicData.publicUrl,
+            image_url,
           },
         ]);
-
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        throw new Error('Failed to create post: ' + insertError.message);
+        if (insertError) throw new Error('Post creation failed.');
+        alert('Post created successfully!');
       }
 
-      // Reset form
+      // Reset & redirect
       setDescription('');
       setImageFile(null);
       setImagePreview(null);
-      setError('');
-      router.refresh(); // optional
+      setExistingImage(null);
+      router.push('/');
     } catch (err: any) {
-      console.error('Final error:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -100,11 +117,11 @@ export default function FomeCreate() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-4 py-12">
       <form
-        onSubmit={handlePost}
+        onSubmit={handleSubmit}
         className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-6"
       >
         <h2 className="text-3xl font-semibold text-center text-gray-800">
-          Create a Post
+          {postId ? 'Edit Post' : 'Create a Post'}
         </h2>
 
         {error && (
@@ -127,14 +144,13 @@ export default function FomeCreate() {
             htmlFor="imageUpload"
             className="block mb-2 font-medium text-gray-700 cursor-pointer"
           >
-            Upload an image <span className="text-gray-400">(required)</span>
+            {postId ? 'Replace image (optional)' : 'Upload an image (required)'}
           </label>
           <input
             id="imageUpload"
             type="file"
             accept="image/*"
             onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-            required
             className="block w-full text-gray-700 file:border file:border-gray-300 file:rounded file:px-3 file:py-2 file:text-sm file:cursor-pointer file:bg-white file:hover:bg-blue-50 transition"
           />
         </div>
@@ -159,7 +175,13 @@ export default function FomeCreate() {
               : 'bg-blue-600 hover:bg-blue-700'
           }`}
         >
-          {loading ? 'Posting...' : 'Post'}
+          {loading
+            ? postId
+              ? 'Updating...'
+              : 'Posting...'
+            : postId
+            ? 'Update Post'
+            : 'Post'}
         </button>
       </form>
     </div>
