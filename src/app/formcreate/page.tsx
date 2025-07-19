@@ -12,6 +12,7 @@ export default function FomeCreate() {
 
   const [user, setUser] = useState<User | null>(null);
   const [description, setDescription] = useState('');
+  const [visibility, setVisibility] = useState('free'); // added visibility state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export default function FomeCreate() {
             setDescription(data.description);
             setExistingImage(data.image_url);
             setImagePreview(data.image_url);
+            setVisibility(data.visibility || 'free'); // set visibility when editing
           }
         });
     }
@@ -85,7 +87,7 @@ export default function FomeCreate() {
       if (postId) {
         const { error: updateError } = await supabase
           .from('posts')
-          .update({ description, image_url })
+          .update({ description, image_url, visibility }) // added visibility here
           .eq('id', postId);
 
         if (updateError) throw new Error('Update failed.');
@@ -98,6 +100,7 @@ export default function FomeCreate() {
             user_id: user.id,
             description,
             image_url,
+            visibility, // added visibility here
           },
         ]);
 
@@ -107,6 +110,7 @@ export default function FomeCreate() {
 
       // Reset form
       setDescription('');
+      setVisibility('free'); // reset visibility on submit
       setImageFile(null);
       setImagePreview(null);
       setExistingImage(null);
@@ -146,6 +150,24 @@ export default function FomeCreate() {
           rows={4}
           className="w-full p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
+
+        <div>
+          <label
+            htmlFor="visibility"
+            className="block mb-2 font-medium text-gray-700"
+          >
+            Visibility
+          </label>
+          <select
+            id="visibility"
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          >
+            <option value="free">Free</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
 
         <div>
           <label
