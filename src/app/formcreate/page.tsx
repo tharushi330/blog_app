@@ -12,14 +12,12 @@ export default function FomeCreate() {
 
   const [user, setUser] = useState<User | null>(null);
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState('free'); // added visibility state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch logged-in user
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error }) => {
       if (error || !data?.user) {
@@ -30,7 +28,6 @@ export default function FomeCreate() {
     });
   }, [router]);
 
-  // If editing, fetch existing post
   useEffect(() => {
     if (postId) {
       supabase
@@ -43,13 +40,11 @@ export default function FomeCreate() {
             setDescription(data.description);
             setExistingImage(data.image_url);
             setImagePreview(data.image_url);
-            setVisibility(data.visibility || 'free'); // set visibility when editing
           }
         });
     }
   }, [postId]);
 
-  // Preview image
   useEffect(() => {
     if (!imageFile) return;
     const url = URL.createObjectURL(imageFile);
@@ -65,7 +60,6 @@ export default function FomeCreate() {
     try {
       let image_url = existingImage;
 
-      // Upload new image
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
@@ -83,11 +77,10 @@ export default function FomeCreate() {
         image_url = publicData?.publicUrl || null;
       }
 
-      // Create or update post
       if (postId) {
         const { error: updateError } = await supabase
           .from('posts')
-          .update({ description, image_url, visibility }) // added visibility here
+          .update({ description, image_url })
           .eq('id', postId);
 
         if (updateError) throw new Error('Update failed.');
@@ -100,7 +93,6 @@ export default function FomeCreate() {
             user_id: user.id,
             description,
             image_url,
-            visibility, // added visibility here
           },
         ]);
 
@@ -108,9 +100,7 @@ export default function FomeCreate() {
         alert('Post created successfully!');
       }
 
-      // Reset form
       setDescription('');
-      setVisibility('free'); // reset visibility on submit
       setImageFile(null);
       setImagePreview(null);
       setExistingImage(null);
@@ -150,24 +140,6 @@ export default function FomeCreate() {
           rows={4}
           className="w-full p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
-
-        <div>
-          <label
-            htmlFor="visibility"
-            className="block mb-2 font-medium text-gray-700"
-          >
-            Visibility
-          </label>
-          <select
-            id="visibility"
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-          >
-            <option value="free">Free</option>
-            <option value="premium">Premium</option>
-          </select>
-        </div>
 
         <div>
           <label

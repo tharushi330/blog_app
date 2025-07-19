@@ -12,3 +12,5 @@
 
 - make a visibility
 - Protected premium content
+-edit post
+-create payment

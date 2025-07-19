@@ -1,4 +1,3 @@
-// pages/api/webhook.ts (Next.js Pages Router)
 import Stripe from 'stripe';
 import { buffer } from 'micro';
 import { supabase } from '../lib/supabaseClient';
@@ -9,7 +8,6 @@ export const config = {
   },
 };
 
-// ✅ Correct API version used (replace with your actual version like '2022-11-15')
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-06-30.basil' as any,
 });

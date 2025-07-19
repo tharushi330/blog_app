@@ -8,6 +8,7 @@
 -create bucket
 -create post & upload image
 -create search post 
-
+-edit post
+-create payment
 
  
