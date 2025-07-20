@@ -17,13 +17,14 @@ export async function POST(req: NextRequest) {
             product_data: {
               name: 'Premium Blog Access',
             },
-            unit_amount: 990, 
+            unit_amount: 990,
           },
           quantity: 1,
         },
       ],
-      success_url: `https://hxlqgvacixgafzoyqysw.supabase.co/success`,
-      cancel_url: `https://hxlqgvacixgafzoyqysw.supabase.co/cancel`,
+      success_url: `http://localhost:3000/success`,
+      cancel_url: `http://localhost:3000/cancel`,
+
     });
 
     return NextResponse.json({ url: session.url });
