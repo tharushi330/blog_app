@@ -25,7 +25,7 @@ export default function HomePage() {
     let query = supabase.from('posts').select('*').order('id', { ascending: false });
 
     if (search.trim() !== '') {
-      query = query.ilike('description', `%${search}%`); // search in description column
+      query = query.ilike('description', `%${search}%`);
     }
 
     const { data, error } = await query;
@@ -53,7 +53,7 @@ export default function HomePage() {
           </p>
         </header>
 
-        {/* Search box */}
+        
         <form onSubmit={handleSearch} className="mb-8 flex justify-center max-w-md mx-auto">
           <input
             type="text"

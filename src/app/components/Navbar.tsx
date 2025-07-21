@@ -29,7 +29,7 @@ export default function Navbar() {
           onClick={handleCheckout}
           className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
         >
-          Price
+          subscribe
         </button>
       </div>
     </nav>

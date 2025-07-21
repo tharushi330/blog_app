@@ -17,7 +17,7 @@ export default async function PremiumPage() {
 
   return (
     <div>
-      <h1>🎉 Welcome to Premium Content</h1>
+      <h1> Welcome to Premium Content</h1>
       <p>Here is your exclusive premium content!</p>
     </div>
   );
