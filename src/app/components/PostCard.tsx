@@ -14,6 +14,7 @@ interface Post {
   description: string;
   image_url: string;
   user_id: string;
+  is_premium: boolean;
 }
 
 interface PostCardProps {
@@ -57,6 +58,11 @@ export default function PostCard({ post }: PostCardProps) {
         className="w-full h-48 object-cover"
       />
       <div className="p-4 flex-1">
+        {post.is_premium && (
+          <span className="inline-block mb-2 px-2 py-1 bg-yellow-300 text-yellow-900 text-xs font-semibold rounded">
+            Premium
+          </span>
+        )}
         <p className="text-gray-700">{post.description}</p>
       </div>
 
