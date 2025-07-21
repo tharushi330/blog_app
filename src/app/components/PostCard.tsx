@@ -23,6 +23,7 @@ interface PostCardProps {
 
 export default function PostCard({ post }: PostCardProps) {
   const [userId, setUserId] = useState<string | null>(null);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -50,6 +51,25 @@ export default function PostCard({ post }: PostCardProps) {
 
   const isOwner = userId === post.user_id;
 
+  const handleDelete = async () => {
+    const confirmDelete = confirm('Are you sure you want to delete this post?');
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', post.id);
+
+    if (error) {
+      alert('Failed to delete the post: ' + error.message);
+    } else {
+      alert('Post deleted successfully!');
+      setIsDeleted(true); 
+    }
+  };
+
+  if (isDeleted) return null;
+
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col">
       <img
@@ -67,12 +87,19 @@ export default function PostCard({ post }: PostCardProps) {
       </div>
 
       {isOwner && (
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 flex gap-2">
           <Link href={`/formcreate?id=${post.id}`}>
-            <button className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition">
+            <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition">
               Edit
             </button>
           </Link>
+
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition"
+          >
+            Delete
+          </button>
         </div>
       )}
     </div>
