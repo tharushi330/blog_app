@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { NextRequest, NextResponse } from 'next/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-06-30.basil' as any,
+  apiVersion: '2025-06-30.basil' as const,
 });
 
 export async function POST(req: NextRequest) {
@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
       ],
       success_url: `http://localhost:3000/success`,
       cancel_url: `http://localhost:3000/cancel`,
-
     });
 
     return NextResponse.json({ url: session.url });
