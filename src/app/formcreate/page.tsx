@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic'; 
+
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabaseClient';
@@ -19,6 +21,7 @@ export default function FormCreate() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error }) => {
       if (error || !data?.user) {
@@ -29,6 +32,7 @@ export default function FormCreate() {
     });
   }, [router]);
 
+  
   useEffect(() => {
     if (postId) {
       supabase
@@ -47,6 +51,7 @@ export default function FormCreate() {
     }
   }, [postId]);
 
+  
   useEffect(() => {
     if (!imageFile) return;
     const url = URL.createObjectURL(imageFile);
@@ -54,6 +59,7 @@ export default function FormCreate() {
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
@@ -62,6 +68,7 @@ export default function FormCreate() {
     try {
       let image_url = existingImage;
 
+      
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
@@ -80,18 +87,17 @@ export default function FormCreate() {
       }
 
       if (postId) {
+        
         const { error: updateError } = await supabase
           .from('posts')
           .update({ description, image_url, is_premium: isPremium })
           .eq('id', postId);
 
-        if (updateError) {
-          console.error('Update Error:', updateError);
-          throw new Error('Update failed.');
-        }
+        if (updateError) throw new Error('Update failed.');
 
         alert('Post updated successfully!');
       } else {
+        
         if (!user) throw new Error('User not found');
 
         const { error: insertError } = await supabase.from('posts').insert([
@@ -103,10 +109,7 @@ export default function FormCreate() {
           },
         ]);
 
-        if (insertError) {
-          console.error('Insert Error:', insertError); 
-          throw new Error('Post creation failed.');
-        }
+        if (insertError) throw new Error('Post creation failed.');
 
         alert('Post created successfully!');
       }
@@ -118,7 +121,6 @@ export default function FormCreate() {
       setExistingImage(null);
       setIsPremium(false);
 
-      
       router.push('/');
     } catch (err) {
       if (err instanceof Error) {
