@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `https://blog-app-4god.vercel.app/payment-success`,
+      success_url: `http://localhost:3000/success`,
       cancel_url: `http://localhost:3000/cancel`,
     });
 
