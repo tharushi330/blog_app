@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 
-export default function FomeCreate() {
+export default function FormCreate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
